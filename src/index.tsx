@@ -1,18 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
+import Proverka from './Study';
+import {RegistrationForm} from './components/RegistrationForm'
+import { MainSite } from './components/Main';
 
-
+//import App from './App';
+//import Tester from './Study';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  
+    <RegistrationForm />
 );
+
 
 
 //Подготовка
