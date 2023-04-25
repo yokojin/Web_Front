@@ -1,9 +1,7 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
+import {BrowserRouter, Link} from 'react-router-dom';
 import './index.css';
-import Proverka from './Study';
-import {RegistrationForm} from './components/RegistrationForm'
-import { MainSite } from './components/Main';
+import App from './App';
 
 //import App from './App';
 //import Tester from './Study';
@@ -13,8 +11,10 @@ const root = ReactDOM.createRoot(
 );
 
 root.render(
-  
-    <RegistrationForm />
+  //Подключение маршрутизации для одностраничного сайта
+  <BrowserRouter>
+    <App/>
+    </BrowserRouter>
 );
 
 
