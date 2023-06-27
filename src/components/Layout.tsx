@@ -4,8 +4,10 @@ import {Outlet} from 'react-router-dom';
 import { useAuth } from '../hook/useAuth';
 
 
+ 
 
  const Layout = () => {  
+  
      const {signout}=useAuth();
      const navigate=useNavigate();
     const locccc= useLocation();
@@ -14,9 +16,24 @@ import { useAuth } from '../hook/useAuth';
     const {flag}=useAuth();
     console.log(locccc);
    
+
+    
+
+
   const handleLogOut = (e: React.MouseEvent<HTMLButtonElement>): void => {  
     signout(()=> navigate('/', {replace: true}))    
-  };     
+  };
+  
+  useEffect(  ()  => {        
+    const interval = setInterval(() => {
+      // Вызывается каждые 10 секунд    
+      signout(()=> navigate('/', {replace: true}))   
+    }, 600000);
+    return () => {
+      clearInterval(interval); // Очистить интервал при размонтировании компонента
+    };
+  }, []);
+
       if(tokenStorage!=null){           
         return (          
           <>         
@@ -48,11 +65,11 @@ import { useAuth } from '../hook/useAuth';
                   style={{ backgroundColor: 'indigo' }} data-bs-toggle="dropdown" aria-expanded="false">
                   Menu
                 </button>
-                <ul className="dropdown-menu dropdown-menu-lg-end p-0   bg-secondary" aria-labelledby="dropdownMenuButton1">
-                <li className="btn btn-warning btn-m rounded-0 w-100 mt-0 p-2"><Link to="NikkiDo" style={{textDecoration: "none"}}>Дневник NikkiDo</Link></li>
-                  <li style={{textDecoration: "none"}}><a className="btn btn-warning btn-m rounded-0 w-100 mt-0 p-2"  href="#">Chat</a></li>
-                  <li className="btn btn-warning btn-m rounded-0 w-100 mt-0 p-2"><Link to="NikkiDo/PresentPage" style={{textDecoration: "none"}}>Переход</Link></li>
-                  <li ><button className="btn btn-warning btn-m rounded-0 w-100 mt-0 p-2" onClick={handleLogOut}>Выход</button></li>
+                <ul className="dropdown-menu dropdown-menu-lg-end p-0 border-dark border-2 dropdown-menu-dark" aria-labelledby="dropdownMenuButton1">
+                <li className="btn btn-secondary btn-m rounded-0 w-100 mt-0 p-2 " ><Link to="NikkiDo"   style={{textDecoration: "none", color: '#ffc107'}}>Дневник NikkiDo</Link></li>
+                  <li className="btn btn-secondary btn-m rounded-0 w-100 mt-0 p-2" > <Link to="Chat"  style={{textDecoration: "none", color: '#ffc107'}}>Chat</Link> </li>
+                  <li className="btn  btn-secondary btn-m rounded-0 w-100 mt-0 p-2"><Link to="NikkiDo/PresentPage"  style={{textDecoration: "none", color: '#ffc107'}}>Переход</Link></li>
+                  <li ><button className="btn btn-secondary btn-m rounded-0 w-100 mt-0 p-2"  style={{textDecoration: "none", color: '#ffc107'}} onClick={handleLogOut}>Выход</button></li>
                 </ul>
               </div>
             </nav>

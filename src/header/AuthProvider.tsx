@@ -24,9 +24,10 @@ export const AuthProvider =({children}: AuthProviderProps)=>{
     const [user,setUser]=useState<string| null>(null);
     const [password, setPassword]=useState<string| null>(null);
     const [flag, setFlag]=useState<boolean>(false);    
-    const setToken = async (token: string) => {
+    const setToken = async (token: string, id: string) => {
         
         localStorage.setItem('token', token);
+        localStorage.setItem('userId', id);
         const savedToken = localStorage.getItem('token');
        
         if (savedToken !== token) {
@@ -39,6 +40,7 @@ export const AuthProvider =({children}: AuthProviderProps)=>{
 
     const removeToken = async () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('userId');
         setFlag(false);
         console.log("Token has been delete");
         
@@ -54,16 +56,24 @@ export const AuthProvider =({children}: AuthProviderProps)=>{
            
             try {               
                 const token="your token";
+                const Id="id";
+                const  email="email";
                 const response = await axios.post(`https://localhost:7051/login`, user,{
                     headers: {
                         'Content-Type':'application/json',                                   
                     },
                     params: {
-                        access_token: token,                       
+                        access_token: token,
+                        userId: Id,
+                        email:email                     
                     }                          
-                } );     
-                   await setToken(response.data.access_token); 
+                } ); 
+                 
+                    console.log(response.data.userId);// просто посмотреть какой id приходит
+                    console.log(response.data.token)
+                    setToken(response.data.token, response.data.userId); 
                    await  navigate("/NikkiDo", { replace: true });
+
                     console.log("Тест_2: "+ flag);
                 console.log("Получение " +response.data.access_token);  
                 
@@ -84,17 +94,18 @@ export const AuthProvider =({children}: AuthProviderProps)=>{
           if (cb) {
           await cb();
           }
-    }
-    
+    }   
     const signout= async (cb: any) => {  
+
        await removeToken();
+
        navigate("/", { replace: true });
         //cb();
     }     
-    const authContextValue= {user, password, flag, signin, signout,};
 
-    console.log("пришло имя ===== " + user + " контескт " +AuthContext +" flag " + flag);
-  
+    const authContextValue= {user, password, flag, signin, signout,};
+    console.log("пришло имя ===== " + user + " контескт " +AuthContext +" flag " + flag);  
+
     return <>  
     <AuthContext.Provider value={authContextValue}>
         <>{children}</>

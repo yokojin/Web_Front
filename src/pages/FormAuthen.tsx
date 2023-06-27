@@ -5,8 +5,6 @@ import {useNavigate, useLocation} from 'react-router-dom';
 import { useAuth } from '../hook/useAuth';
 
 
-
-
 // Лоигка с состоянием для проверки пароля
 const FormAuth = () =>{ 
   const [loggedIn, setLoggedIn] = useState(false);

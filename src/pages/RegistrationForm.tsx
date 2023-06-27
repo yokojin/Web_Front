@@ -1,36 +1,62 @@
 import { ok } from 'assert';
 import axios, { AxiosError } from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hook/useAuth';
 
 
+
+
+
 interface UserRegistr {
-  FirstName: string;  
+  FirstName: string; 
   LastName: string;
   EmailAddres: string;   
   Password: string;   
   PasswordSec: string;
+  TimeZone: string;
+  
   //Day: number;  
  }
 
- 
+ function getTimeLeft(date: Date) {
+  const now = new Date();
+  const midnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0,
+    0,
+    0
+  );
+  const diff = midnight.getTime() - now.getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+ // const timerzone = Intl.DateTimeFormat().resolvedOptions().timeZoneName;
+
+return ({ hours, minutes, seconds});
+}
 
 
- const RegistrationForm = () =>{
+
+  const RegistrationForm = () =>{
   const [isRegistered, setIsRegistered] = useState(true);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
 
-          const navigate = useNavigate();
+  
     //Переменная для установки данных
+    // Ещё нужно передать время
     const [UserReg, setUserReg]=useState<UserRegistr>({
       FirstName: "",
       LastName: "",
       EmailAddres: "",
       Password: "",
       PasswordSec:"",
+       TimeZone: "",
      });
    
      const [name, setName] = useState<string | null>(null);
@@ -41,16 +67,19 @@ interface UserRegistr {
      const handleChangeInput =  async (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {  
       //Применяет изменение при сохранений предыдущего объетка
         const {name, value}=event.target;
-        setUserReg((prevFormData) => ({
+        setUserReg((prevFormData,) => ({
           ...prevFormData,
           [name]:value,
-        }))      
+        }))     
+        const newTime = {  TimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone};            
+        setUserReg(prevState => ({ ...prevState, TimeZone: newTime.TimeZone})); //Меняем часовой пояс для передачи
       }
 
       
-      
         //Отправка данных для регистрации на сервер
-        const HandleSubmit =async (event: React.FormEvent<HTMLFormElement>) => {               
+        const HandleSubmit =async (event: React.FormEvent<HTMLFormElement>) => {    
+          
+                  
           if(UserReg.FirstName==="" || UserReg.LastName==="" ||
             UserReg.EmailAddres==="" ||  UserReg.Password==="" || UserReg.PasswordSec==="" ){
               setErrorMessage("Заполните все поля!"); 
@@ -61,11 +90,18 @@ interface UserRegistr {
                  
           }
           else{
+            
             event.preventDefault();
+            
+            
+           // UserReg.TimeNow.Hours=newTime.Hours;      
             console.log("Данные которые отправляются \n" + UserReg.FirstName + 
-            '\n' + UserReg.LastName + '\n' + UserReg.EmailAddres + '\n' + UserReg.Password + '\n'  + UserReg.PasswordSec + '\n')          
+            '\n' + UserReg.LastName + '\n' + UserReg.EmailAddres + '\n' + UserReg.Password + '\n'  + UserReg.PasswordSec + '\n' 
+            + UserReg.TimeZone + '\n');
+ 
+            
             //Отправка формы
-            try {
+            try {             
               setIsRegistered(false);
               const response = await axios.post('https://localhost:7051/Reg/UpdateReg', 
                  JSON.stringify(UserReg),{
@@ -95,10 +131,10 @@ interface UserRegistr {
                   EmailAddres:"",
                   Password:"",
                   PasswordSec:"",  
-                                         
+                  TimeZone: "",                      
                 });
                 
-                }, 2000);
+                }, 1000);
                              
                 console.error(error);
                 
@@ -106,7 +142,7 @@ interface UserRegistr {
            
           }         
         }
-       
+        
     return (
       <>
 <div className="container-fluid w-50 vh-75 mt-0 p-2 mb-0">

@@ -6,6 +6,8 @@ type RequireAuthProps= {
   children: React.ReactNode
 }
 
+//Страница на которой можно остовлять отзывы
+//
 
 function PresentPage(){
   console.log("открыта станица по ссылке");
