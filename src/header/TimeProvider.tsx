@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 
 // типизация данных
 interface TimeContextValue {  
-    TimeZone: string | null;
-    setTimeZ: (TimeZone: string | null) => void;
+    timeZone: string | null;
+    setTimeZ: (timeZone: string | null) => void;
    
 }
 
-export const TimeContext = createContext<TimeContextValue>({TimeZone:null, setTimeZ: (TimeZone: string | null) => {} });
+export const TimeContext = createContext<TimeContextValue>({timeZone:null, setTimeZ: () => {} });
 //Интерфейс для узлов
 interface TimeProviderProps {
     children: React.ReactNode;
@@ -17,20 +17,12 @@ interface TimeProviderProps {
 
 export const TimeProvider  =  ({children}: TimeProviderProps)=>{
 
-    const [TimeZone,setTimeZone]=useState<string| null>(null);
-    
-
-     const setTimeZ=  (TimeZone: string | null) =>{
-    
+    const [timeZone,setTimeZone]=useState<string| null>(null);
+     const setTimeZ=  (timeZone: string | null) =>{   
         // Вызываем функцию setTimeZone из TimeProvider и передаем новое значение
-        setTimeZone(TimeZone);
+        setTimeZone(timeZone);
       };
-
-    const TimeContextValue= {TimeZone, setTimeZ};
-    
-
-
-
+    const TimeContextValue= {timeZone, setTimeZ};   
     return <>  
     <TimeContext.Provider value={TimeContextValue}>
         <>{children}</>

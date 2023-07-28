@@ -1,3 +1,4 @@
+import axios from 'axios';
 import {useState, useEffect} from 'react';
 import {Link,Navigate,Route,Routes,useLocation, useNavigate} from 'react-router-dom';
 import {Outlet} from 'react-router-dom';
@@ -5,36 +6,32 @@ import { useAuth } from '../hook/useAuth';
 
 
  
+interface RefTimeData{
+  UserId: string | null;
+  UserName: string | null;
+}
 
- const Layout = () => {  
+
+
+ const Layout =  () => {  
   
      const {signout}=useAuth();
      const navigate=useNavigate();
     const locccc= useLocation();
     const [isLogin, setisLogin]= useState<boolean>(false);
     const tokenStorage = localStorage.getItem("token");
+    const token= localStorage.getItem('token');
     const {flag}=useAuth();
     console.log(locccc);
    
 
-    
-
-
   const handleLogOut = (e: React.MouseEvent<HTMLButtonElement>): void => {  
     signout(()=> navigate('/', {replace: true}))    
   };
-  
-  useEffect(  ()  => {        
-    const interval = setInterval(() => {
-      // Вызывается каждые 10 секунд    
-      signout(()=> navigate('/', {replace: true}))   
-    }, 600000);
-    return () => {
-      clearInterval(interval); // Очистить интервал при размонтировании компонента
-    };
-  }, []);
 
-      if(tokenStorage!=null){           
+  
+      if(tokenStorage!=null){   
+              
         return (          
           <>         
           <div className="container-fluid-md p-0">
@@ -54,13 +51,15 @@ import { useAuth } from '../hook/useAuth';
                   <li className="nav-item">
                     <a className="nav-link disabled" href="#" tabIndex={-1} aria-disabled="true">Возможно ссылка</a>
                   </li>
+                  
                 </ul>
                 {/*<form className="d-flex">
 <input className="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
 <button className="btn btn-outline-success" type="submit">Search</button>
 </form>*/}
               </div>
-              <div className="dropdown" >
+              <h3 className="px-3 mx-5" style={{textDecoration: "none", color:  "indigo"}}>{localStorage.getItem('Name')}</h3>
+              <div className="dropdown" >             
                 <button className="btn btn-primary btn-sm dropdown-toggle p-2 px-4 rounded border  m-0" type="button" id="dropdownMenuButton1"
                   style={{ backgroundColor: 'indigo' }} data-bs-toggle="dropdown" aria-expanded="false">
                   Menu

@@ -23,9 +23,12 @@ interface AuthProviderProps {
 export const AuthProvider =({children}: AuthProviderProps)=>{
     const [user,setUser]=useState<string| null>(null);
     const [password, setPassword]=useState<string| null>(null);
-    const [flag, setFlag]=useState<boolean>(false);    
+    const [flag, setFlag]=useState<boolean>(false); 
+    const setName = async (name: string) => { localStorage.setItem('Name', name)}
     const setToken = async (token: string, id: string) => {
         
+
+       
         localStorage.setItem('token', token);
         localStorage.setItem('userId', id);
         const savedToken = localStorage.getItem('token');
@@ -71,7 +74,8 @@ export const AuthProvider =({children}: AuthProviderProps)=>{
                  
                     console.log(response.data.userId);// просто посмотреть какой id приходит
                     console.log(response.data.token)
-                    setToken(response.data.token, response.data.userId); 
+                    setToken(response.data.token, response.data.userId);
+                    setName(response.data.name); 
                    await  navigate("/NikkiDo", { replace: true });
 
                     console.log("Тест_2: "+ flag);
