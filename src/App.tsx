@@ -7,15 +7,18 @@ import {Layout} from './components/Layout';
 import {RequireAuth} from './header/RequireAuth';
 import {AuthProvider } from './header/AuthProvider';
 import { PresentPage } from './pages/PresentPage';
-import { Chat } from './pages/OpenChat';
+import { DayList } from './pages/DayListChat';
 import { TimeProvider } from './header/TimeProvider';
+import { ConfigProvider } from './header/BaseURL';
 
 
 function  App() {
+  const baseUrl = "https://localhost:7051";
   return (
 
     <AuthProvider>
     <TimeProvider>
+    <ConfigProvider baseUrl={baseUrl}>
        {/*Есть базовый маршрут через который мы делаем переходы по маршруту */}
       <Routes>
       
@@ -33,14 +36,15 @@ function  App() {
           <PresentPage/>  
         </RequireAuth>
     } /> 
-    <Route path="/Chat" element={   
+    <Route path="/DayListChat" element={   
         <RequireAuth >
-          <Chat/>   
+          <DayList/>   
         </RequireAuth>
     } />  
       <Route path='*' element={<></>}/>{/*для всех остальных случаев */}
       </Route>      
       </Routes>
+    </ ConfigProvider>
       </TimeProvider>
       </AuthProvider>
       

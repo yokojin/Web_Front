@@ -44,6 +44,8 @@ export const AuthProvider =({children}: AuthProviderProps)=>{
     const removeToken = async () => {
         localStorage.removeItem('token');
         localStorage.removeItem('userId');
+        localStorage.removeItem('Name');
+        localStorage.removeItem('timeZone');
         setFlag(false);
         console.log("Token has been delete");
         

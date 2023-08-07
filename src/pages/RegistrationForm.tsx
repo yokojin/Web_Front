@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hook/useAuth';
+import { useURL } from '../components/useURL';
 
 
 
@@ -46,7 +47,7 @@ return ({ hours, minutes, seconds});
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-
+  const baseUrl = useURL();
   
     //Переменная для установки данных
     // Ещё нужно передать время
@@ -67,8 +68,8 @@ return ({ hours, minutes, seconds});
      const handleChangeInput =  async (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> ) => {  
       //Применяет изменение при сохранений предыдущего объетка
         const {name, value}=event.target;
-        setUserReg((prevFormData,) => ({
-          ...prevFormData,
+        setUserReg((prevUserReg,) => ({
+          ...prevUserReg,
           [name]:value,
         }))     
         const newTime = {  TimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone};            
@@ -103,7 +104,7 @@ return ({ hours, minutes, seconds});
             //Отправка формы
             try {             
               setIsRegistered(false);
-              const response = await axios.post('https://localhost:7051/Reg/UpdateReg', 
+              const response = await axios.post(`${baseUrl}/Reg/UpdateReg`, 
                  JSON.stringify(UserReg),{
                  //Передача объетка в на сервер
                  headers:{

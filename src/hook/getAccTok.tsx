@@ -10,54 +10,55 @@ interface identy{
 };
 
 
-const RefreshAccessToken = async () => {
-  const navigate=useNavigate();
-  const [identy, setidenty]=useState<identy>({ 
-    userId: localStorage.getItem('userId'),
-    access_token: localStorage.getItem('token'),
-   } );
+const RefreshAccessToken = async (inOut: boolean) => {
+//  const navigate=useNavigate();
+ 
  // const navigate = useNavigate();
-  const idIdenty= localStorage.getItem('userId');
+  const userID= localStorage.getItem('userId');
   const token = localStorage.getItem('token');
-
+ 
  
  //console.log(`${idIdenty}`+ "  " + `${token}`)
   
-    console.log('Обращение к контроллеру');     
-    const RefToken = async (token: any) => {   
+   // console.log('Обращение к контроллеру');     
+    
       try {
         const response = await axios.post('https://localhost:7051/RefreshToken/RefreshToken',
-          identy,
-          {
-              params: {
-              userId: localStorage.getItem('userId'),
-            },
+         {},
+         {
             headers: {        
               'Content-Type': 'application/json',
-               Authorization: `Bearer ${token}`,                                             
+               'Authorization': `Bearer ${token}`,                                             
+            },
+            params: {
+              userId: userID,
             },
           }         
         );
         const userId = response.data.userid;
-         token = response.data.access_token;       
+        const  tokend = response.data.access_token;       
        // console.log('получили токен: ' + token);
          localStorage.setItem('userId', userId);       
-         localStorage.setItem('token', token);
+         localStorage.setItem('token', tokend);
+         inOut=true
+         return inOut;
         // await  navigate('/NikkiDo', { replace: true });
       } catch (error: any) {
         if (error.response.request.status === 401) {
          // console.log('Время ref_token истекло ' + error.response.request.status);
           localStorage.removeItem('token');
         localStorage.removeItem('userId');
-        await  navigate('/login', { replace: true });
+        inOut=false
+         return inOut;
+      //  await  navigate('/login', { replace: true });
         }
       }
-    };
+  
 
-  await  RefToken(token);
+
  
 
-  return null; // или верните любой другой JSX, если нужно
+  // или верните любой другой JSX, если нужно
 };
 
 export default RefreshAccessToken;

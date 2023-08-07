@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {useState, useEffect} from 'react';
+import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import {Link,Navigate,Route,Routes,useLocation, useNavigate} from 'react-router-dom';
 import {Outlet} from 'react-router-dom';
 import { useAuth } from '../hook/useAuth';
@@ -46,7 +47,12 @@ interface RefTimeData{
                     <a className="nav-link active" aria-current="page" href="#">Можно использовать для ссылка</a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link" href="#"> Справка</a>
+                  <OverlayTrigger
+        placement="bottom" // Укажите местоположение всплывающей справки (top, right, bottom, left)
+        overlay={<Tooltip>Будьте внимательны при заполнений пункта "Что хотелось бы узнать или сделать за день" после нажатия Старта изменять будет нельзя, остальные пунты напротив можно редактировать и перезаписывать до конца дня</Tooltip>}
+      >
+        <span className="nav-link active" >Справка</span>
+      </OverlayTrigger>
                   </li>
                   <li className="nav-item">
                     <a className="nav-link disabled" href="#" tabIndex={-1} aria-disabled="true">Возможно ссылка</a>
@@ -66,14 +72,14 @@ interface RefTimeData{
                 </button>
                 <ul className="dropdown-menu dropdown-menu-lg-end p-0 border-dark border-2 dropdown-menu-dark" aria-labelledby="dropdownMenuButton1">
                 <li className="btn btn-secondary btn-m rounded-0 w-100 mt-0 p-2 " ><Link to="NikkiDo"   style={{textDecoration: "none", color: '#ffc107'}}>Дневник NikkiDo</Link></li>
-                  <li className="btn btn-secondary btn-m rounded-0 w-100 mt-0 p-2" > <Link to="Chat"  style={{textDecoration: "none", color: '#ffc107'}}>Chat</Link> </li>
-                  <li className="btn  btn-secondary btn-m rounded-0 w-100 mt-0 p-2"><Link to="NikkiDo/PresentPage"  style={{textDecoration: "none", color: '#ffc107'}}>Переход</Link></li>
+                  <li className="btn btn-secondary btn-m rounded-0 w-100 mt-0 p-2" > <Link to="DayListChat"  style={{textDecoration: "none", color: '#ffc107'}}>Список дней</Link> </li>
+                  <li className="btn  btn-secondary btn-m rounded-0 w-100 mt-0 p-2"><Link to="NikkiDo/PresentPage"  style={{textDecoration: "none", color: '#ffc107'}}>Отзывы</Link></li>
                   <li ><button className="btn btn-secondary btn-m rounded-0 w-100 mt-0 p-2"  style={{textDecoration: "none", color: '#ffc107'}} onClick={handleLogOut}>Выход</button></li>
                 </ul>
               </div>
             </nav>
-          </div><main className="container-fluid p-0">
-              <Outlet />
+          </div><main className="container-fluid">
+              <Outlet  />
             </main></>
 
         );

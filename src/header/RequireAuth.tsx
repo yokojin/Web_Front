@@ -26,34 +26,8 @@ const isAccessTokenExpired = (tokenStorage: string): boolean => {
       // В случае ошибки декодирования, считаем токен недействительным
       return true;
     }
-
-
-    
+     
   };
-
-  /*
-  if (tokenStorage) {
-    // Декодирование токена
-    const decodedToken: any = jwtDecode(tokenStorage);
-    
-      
-    // Вывод информации о токене
-    console.log(decodedToken);    
-    const expirationTime = new Date(decodedToken.exp * 1000); 
-    const currentTime = new Date(); // Текущее время
-    const timeDiff = expirationTime.getTime() - currentTime.getTime();
-    const minutesRemainng = Math.floor(timeDiff/1000/60);
-   
-
-      console.log("Время осталось -" + minutesRemainng);
-      
-    
-  } else {
-    // Обработка случая, когда токен отсутствует в хранилище
-    console.log('Токен не найден в локальном хранилище');
-  }
-  */
-  
 
 useEffect(() => {
     console.log('myState has changed:', flag);

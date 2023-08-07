@@ -9,88 +9,47 @@ import { useTimeZone } from '../hook/useTimeZone';
 import RefreshAccessToken from '../hook/getAccTok';
 import {RefreshComponent} from '../hook/RefreshTimer';
 import { useNavigate } from 'react-router-dom';
-import { HandleRecordKnowledge } from '../hook/HandleRecordKnowledge';
+import { useURL } from '../components/useURL';
+import { DataUser, FirstFixData, KnowledgeInterface, PhilosoInterface, RefreshTime, RefTimeData } from '../header/Interfaces';
+import RMind from '../hook/RecordMind';
+import RKnow from '../hook/RecordKnow';
+import RWhatConclusions from '../hook/RecordConclusions';
+import { updateStateData } from '../hook/UpdateResponseData'
+import { Modal, Button } from 'react-bootstrap';
 
 
-
-//Данные дневника
-interface DataUser {
-  UserId: string| null;
- WhatNewinDay: string;  
- NewKnoledge: string;
- DayPhilosophy: string;   
- WhatDone: string;   
- WhatNotDone: string;   
- Сonclusions: string;    
- //Day: number;  
-}
-
-
-
-//Данные для фиксации первого дня
-export interface FirstFixData{
-  UserId: string | null;
-  WhatNewinDay: string;
- // Day: number;
-  IsFixedStart: boolean;
-  IsFixedEnd: boolean;
- 
-}
-
-//Data for endFix data to the server
-interface RefTimeData{
-  UserId: string | null;
-  WhatNewinDay: string;
-  Day: number; 
-  IsFixedStart: boolean;
-  IsFixedEnd: boolean;
-}
-
-export interface RefreshTime{
-  UserId: string | null;
-  TimeZone: string | null;
-  Day: number; 
-  onOffTimer: boolean;
-  whnd: string | null;
-  isDayFixed: boolean;
-};
 
 interface Philosophy{
   TheSay: string | null;
   Autohor: string | null; 
 }
 
-export interface Knowledge{
-  UserId: string | null;
-  Know: string;
- 
-}
+
 //Разделить компоненты
 /*
   1.Фиксировать определённые ячейки
   2.Таймер после определённого время фиксировать весь день
   3.Переход между днями сделать 30 дней 
-  4.Вывод афоризмов по таймеру -- найти афоризмы и залить в базу (возможно придётся делать базе данных миграцию)
   5.Вывод даты
   6.Можно проверять аксесс токен в моменте обращения к определённым ресурсам
 */
-
 const  NikkiDoDaily: React.FC = () =>{ 
 
-  
  const navigate=useNavigate();
+ const baseUrl = useURL();
  const {timeZone, setTimeZ} = useTimeZone();
  const [startFix, setStartFix]=useState<boolean>(true);
  const [isDayFixed, setIsDayFixed]=useState<boolean>(true);
  const [endFix, setEndFix]=useState<boolean>(true);
- const [recordYesNo, setrecordYesNo]=useState<boolean>(true);// кнопка для записи
  const usId=localStorage.getItem('userId');
  const token=localStorage.getItem('token');
+ const [textareaEditableMind, setTextareaEditable] = useState(true);
+ const [textareaEditableKnow, setTextareaEditableKnow] = useState(true);
+ const [textareaEditableConclus, setTextareaEditableConclus]=useState(true);
+ const [showModal, setShowModal] = useState(false);
+ const [inOut, setinOut]=useState<boolean>(false);
+
  
- const [textareaEditable, setTextareaEditable] = useState(true);
- const[buttonText, setbuttonText]=useState("Запись");
-
-
 // Переменные для складывания в массив
   // const [WhatNewinDay, setWhatNewinDay,] = useState<string | null>();
    const [formData, setFormData]=useState<DataUser>({
@@ -128,16 +87,22 @@ const  NikkiDoDaily: React.FC = () =>{
     isDayFixed: false,
    }
    );
-   
    const [philosophy, setPhilosophy]=useState<Philosophy>({ 
     TheSay: "",
     Autohor:"",
    });
    
-   const [Knowledge, setKnowledge]=useState<Knowledge>({ 
+   const [Knowledge, setKnowledge]=useState<KnowledgeInterface>({ 
     UserId: localStorage.getItem('userId'),
     Know: "",
    });
+   const [DayPhilos, setDayPhilos]=useState<PhilosoInterface>({ 
+    UserId: localStorage.getItem('userId'),
+    PhiloMind: "",
+   });
+
+   
+  
 
 
     //Проверка начат ли день и проверка на фиксацию
@@ -145,21 +110,27 @@ const  NikkiDoDaily: React.FC = () =>{
     //Проверка: начат ли день или нет а точнее обновление страницы 
     //Если траница обновлена то выставить таймер по часовму поясу 
  
-    console.log('Нажал и полетел \n');     
-  RefreshAccessToken(); 
-    useEffect( () => {
-     
-      const handlePageRefresh = (event: BeforeUnloadEvent) => {
-       
+  //  console.log('Нажал и полетел \n');     
+
+    useEffect(  () => {  
+      const handlePageRefresh = (event: BeforeUnloadEvent) => {    
         event.preventDefault();  
        
       }; 
-      console.log('Отслеживание обновления сраницы\n');              
-       // setEndFix(true);  
-       const fetchData = async ()=>{
+     // console.log('Отслеживание обновления сраницы\n');              
+       // setEndFix(true);   
+       const fetchData = async ()=>   {
+      
                        // RefreshAccessToken();                    
-      try {        
-           const response = await  axios.post('https://localhost:7051/RefreshTime/TimeChecker',
+      try {      
+        const result = await RefreshAccessToken(inOut);
+        if (result !== undefined) {
+          setinOut(result);
+          if (!result) {
+            navigate('/login', { replace: true });
+          }
+        }
+           const response = await  axios.post(`${baseUrl}/RefreshTime/TimeChecker`,
             JSON.stringify(refreshTime),           
             {
               headers: {
@@ -172,7 +143,10 @@ const  NikkiDoDaily: React.FC = () =>{
             console.log("timeZOne: "+ response.data.timeZone +"\n");
             console.log(response.data.day);            
             setTimeZ(response.data.timeZone); 
-            //Если день не зафиксирован то старт нажат остальное доступно       
+            //Если день не зафиксирован то старт нажат остальное доступно     
+            setTextareaEditable(false);  
+            setTextareaEditableKnow(false);
+            setTextareaEditableConclus(false);
               if(response.data.isDayFixed==false){
                   setIsDayFixed(true);
                   setStartFix(false);
@@ -195,6 +169,9 @@ const  NikkiDoDaily: React.FC = () =>{
               
               if(response.data.isDayFixed==false && response.data.onOffTimer==false){
                 setTextareaEditable(false);
+              }else{
+
+               // setTextareaEditable(true);
               }
               if(response.data.isDayFixed==null){
                 setStartFix(false);
@@ -205,17 +182,21 @@ const  NikkiDoDaily: React.FC = () =>{
               
             }
               else{           
-            setFirstFixD({
-              ...FirstFixD,  // копируем текущее состояние объекта
-             WhatNewinDay: response.data.whnd,  // изменяем значение свойства Day
-            });
+                updateStateData(response, 
+                setFirstFixD,
+                setDayPhilos,
+                setKnowledge,
+                setrefreshTime,
+                setFormData,
+                FirstFixD,
+                DayPhilos,
+                Knowledge,
+                refreshTime,
+                formData
+              )
             
           }                       
-              setrefreshTime({
-                ...refreshTime,  // копируем текущее состояние объекта
-                Day: response.data.day,  // изменяем значение свойства Day
-              });
-              
+                                       
               if(response.data.day>0){
               //  setStartFix(false);
               }
@@ -236,7 +217,7 @@ const  NikkiDoDaily: React.FC = () =>{
         //Здесь нужно получить день и список дней которые уже выполнены
         const NeedDay = async () => {      
           try {
-               const response = await  axios.post('https://localhost:7051/RefreshTime/TimeChecker',
+               const response = await  axios.post(`${baseUrl}/RefreshTime/TimeChecker`,
                 JSON.stringify(refreshTime),
                 {
                   headers: {
@@ -256,27 +237,37 @@ const  NikkiDoDaily: React.FC = () =>{
                 
               }
             };          
-       
+                     
      fetchData();
-   //RefreshComponent(setFirstFixD,setrefreshTime,setStartFix,setEndFix,setTimeZ,refreshTime,navigate);
-   
-            
+    
+   // RefreshComponent(setFirstFixD,setrefreshTime,setStartFix,setEndFix,setTimeZ,refreshTime,navigate, setIsDayFixed, baseUrl);         
         window.addEventListener('beforeunload', handlePageRefresh);  
       //  RefreshComponent(setFirstFixD,setrefreshTime,setStartFix, setTimeZ,refreshTime,navigate);
 
-     
+      
         return () => {
           window.removeEventListener('beforeunload', handlePageRefresh);
         };
-       
+        RefreshComponent(setFirstFixD,setrefreshTime,setStartFix,setEndFix,setTimeZ,refreshTime,navigate, setIsDayFixed, baseUrl);  
+          
+    
+
+      
     }, []);
  
     
 
     useEffect(  () => {
       const giveMind = async ()=>{
+        const result = await RefreshAccessToken(inOut);
+        if (result !== undefined) {
+          setinOut(result);
+          if (!result) {
+            navigate('/login', { replace: true });
+          }
+        }
       try {
-        const response = await  axios.post('https://localhost:7051/GetPhilosophy/GetPhi',
+        const response = await  axios.post(`${baseUrl}/GetPhilosophy/GetPhi`,
          JSON.stringify(philosophy),
          {
            headers: {
@@ -299,52 +290,60 @@ const  NikkiDoDaily: React.FC = () =>{
        
     }, []);
  
-
-   
-
     const HandleSubmitClick = async(event: React.FormEvent<HTMLButtonElement>) =>{ 
       event.preventDefault();
-      //Отправляем  id,  
-        
-      try {
-       
-        const response = await axios.post('https://localhost:7051/NikkiDo/FirstFixData',       
-           JSON.stringify(FirstFixD),{
-           //Передача объетка  на сервер
-           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-           },
-         }         
-        );       
-        console.log(response.data); // Обработка успешного ответа сервера
-        await  RefreshComponent(setFirstFixD,setrefreshTime,setStartFix, 
-          setEndFix,setTimeZ, refreshTime,navigate, setIsDayFixed); 
-       // setEndFix(); 
-       setStartFix(true);
-       setEndFix(false);
-       // console.log(dayNumber);
-      } catch (error) {
-        console.error(error); // Обработка ошибки сервера
-      }
+      setShowModal(true);
+      
+  
      
     }
 
-   
+    const handleModalConfirm = async (event: React.FormEvent<HTMLButtonElement>) => {   
+         //Отправляем  id,         
+         try {
+       
+          const response = await axios.post(`${baseUrl}/NikkiDo/FirstFixData`,       
+             JSON.stringify(FirstFixD),{
+             //Передача объетка  на сервер
+             headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+             },
+           }         
+          );       
+          console.log(response.data); // Обработка успешного ответа сервера
+          await  RefreshComponent(setFirstFixD,setrefreshTime,setStartFix, 
+            setEndFix,setTimeZ, refreshTime,navigate, setIsDayFixed,baseUrl); 
+          //  setTextareaEditable(true);
+         // setEndFix(); 
+         setStartFix(true);
+         setEndFix(false);
+         // console.log(dayNumber);
+        } catch (error) {
+          console.error(error); // Обработка ошибки сервера
+        } 
+       setShowModal(false);       
+     };
+     const handleModalCancel = () => {
+      setShowModal(false);
+    };
+  
  
+    
+  
   //Зафиксировать Начало дня
 //Кнопка для завершения дня должна быть заблокирована пока день не стартанёт 
 const HandleSubmitClickFix=async (event: React.FormEvent<HTMLButtonElement>) => {
   event.preventDefault();
 
 const updatedEndDay = { UserId: FirstFixD.UserId, Day:refreshTime.Day, WhatNewinDay: FirstFixD.WhatNewinDay, 
-                        NewKnoledge:formData.NewKnoledge, WhatDone: formData.WhatDone, 
-                        WhatNotDone: formData.WhatNotDone, Сonclusions: formData.Сonclusions };
+                        NewKnoledge:Knowledge.Know, DayPhilosophy: DayPhilos.PhiloMind, WhatDone: formData.WhatDone, 
+                        WhatNotDone: formData.WhatNotDone,   Сonclusions: formData.Сonclusions };
   // изменяем значение свойства Day 
   try {   
  
       console.log(updatedEndDay.UserId + " - что отправляем на сервер - " + updatedEndDay.WhatNewinDay);
-      const response = await axios.post('https://localhost:7051/NikkiDo/StopDay',       
+      const response = await axios.post(`${baseUrl}/NikkiDo/StopDay`,       
        JSON.stringify(updatedEndDay),{
        //Передача объетка в на сервер
        headers:{
@@ -352,9 +351,10 @@ const updatedEndDay = { UserId: FirstFixD.UserId, Day:refreshTime.Day, WhatNewin
         Authorization: `Bearer ${token}`,
        },
 
-     }       
+     }     
+       
     );
-    await RefreshComponent(setFirstFixD,setrefreshTime,setStartFix,setEndFix, setTimeZ, refreshTime,navigate,setIsDayFixed);
+    await RefreshComponent(setFirstFixD,setrefreshTime,setStartFix,setEndFix, setTimeZ, refreshTime,navigate,setIsDayFixed,baseUrl);
     console.log(response.data); // Обработка успешного ответа сервера
   } catch (error) {
     console.error(error); // Обработка ошибки сервера
@@ -380,62 +380,21 @@ const updatedEndDay = { UserId: FirstFixD.UserId, Day:refreshTime.Day, WhatNewin
       }))      
      setFormData((prevformData) => ({
         ...prevformData,
-        [name]:value,
+        [name]:value,    
         
-      }))
-       setKnowledge((prevKnowledge) => ({
-         ...prevKnowledge,
-         Know:value,
-       }))
-  };
-
-  //Записать данные в колонку пользователя
-  const HandleRecord = async(event: React.FormEvent<HTMLButtonElement>) =>{
-    event.preventDefault();
-    try {   
-          
-      const newData = await HandleRecordKnowledge(Knowledge, setKnowledge);
-      // Обновляем состояние компонента после успешного запроса 
-      
-    } catch (error) {
-      // Обрабатываем ошибку здесь
-    }
+      }))        
   };
 
 
 
 
-  const HandleRecordWisdom = async(event: React.FormEvent<HTMLButtonElement>) =>{
-    event.preventDefault();
-    if (buttonText === "Редактировать") {
-      // Если endFix равно true и buttonText равно 'Редактировать', то запрещаем редактирование textarea
-      setTextareaEditable(true);
-      setbuttonText("Запись")
-     
-    }  if (buttonText === 'Запись') {
-      // Если endFix равно true и buttonText равно 'Запись', то разрешаем редактирование textarea
-      setTextareaEditable(false);
-      setbuttonText("Редактировать")
-    } else {
-      // Если endFix равно false, то блокируем textarea и кнопку
-    
-    }
-  };
 
-  const handleChangeWisdom =  async (event: React.ChangeEvent<HTMLTextAreaElement> ) => { 
-    if (!textareaEditable) {
-      event.preventDefault();
-    } else {
-      
-     // setTextareaValue(event.target.value);
-    }
-  };
   console.log(refreshTime.Day+ "что попадает в render");
     return (     
 <>
 <form >
-<div className="container-fluid p-3 py-2"  style={{}}>
-     <div className="row align-items-center my-0  bg-dark" style={{height: "100%",minWidth: "900px"}}>
+<div className="container-fluid p-3 py-1 rounded shadow"  style={{}}>
+     <div className="row align-items-center my-0" style={{height: "100%",minWidth: "900px", backgroundColor: "#733c09"}}>
          <div className='d-flex'>
                <h1 className='text-md-start text-warning px-3' style={{marginBottom: "4%"}}>День  {refreshTime.Day}</h1>
                   <div className='position-absolute top-2 end-0 text-center'>
@@ -448,63 +407,60 @@ const updatedEndDay = { UserId: FirstFixD.UserId, Day:refreshTime.Day, WhatNewin
                         <h5 className='text-center text-warning'>Что хотелось бы узнать или сделать за день</h5>
                               <div className="input-group mb-3" style={{padding: "1%", paddingLeft: "1%", paddingTop:"1%", width:"35vw"}}>                            
                                <textarea  className="form-control shadow p-3"  placeholder="Введите текст"  style={{ width: "20vw", height: "17vh", marginLeft:"2%", marginRight:"0%", resize:"none", fontSize:"21px", color:"#333"}} value={FirstFixD.WhatNewinDay} name="WhatNewinDay"   onChange={handleChange} disabled={startFix}></textarea>
-                                        <button  className="btn  text-warning" style={{backgroundColor: "indigo"}} disabled={startFix} onClick={HandleSubmitClick} >Старт</button>                                 
-                        <div className='col-4 w-100 py-5 text-center'>
-                           <h5 className="text-warning ">План дальнейших действий выводы и соображения</h5>
-                              <div className="container mt-4">
-                         <div className="row">
-                   <div className="col-6"><h5 className='text-warning'>Что получилось</h5><textarea  className="form-control shadow p-3" placeholder="Введите текст" style={{padding: "10%", paddingLeft: "1%", paddingTop:"1%", width:"15vw", height:"100%", resize:"none", fontSize:"21px", color:"#333", fontFamily: "Arial, sans-serif" }} 
-                   value={formData.WhatDone}  onChange={handleChange}></textarea> </div>
-                <div className="col-6"><h5 className='text-warning'>Что не получилось</h5><textarea  className="form-control shadow p-3" placeholder="Введите текст" style={{padding: "10%", paddingLeft: "1%", marginLeft:"10%", width:"15vw", height:"100%", resize:"none", fontSize:"21px", color:"#333", fontFamily: "Arial, sans-serif"}} 
-                value={formData.WhatNotDone} onChange={handleChange}></textarea></div> 
-             <div className="w-100 mt-5"><h5 className='text-warning'>Выводы</h5></div>
-          <div className="col-6 mx-0"><textarea  className="form-control shadow p-3" id="" placeholder="Введите текст" style={{padding: "10%", paddingLeft: "1%", marginLeft:"", width:"34vw", height: "10vh", resize:"none", fontSize:"21px", color:"#333", fontFamily: "Arial, sans-serif"}}
+                                        <button  className="btn  text-warning" style={{backgroundColor: "indigo"}} disabled={startFix} onClick={HandleSubmitClick} >Старт</button>  
+                                        <Modal show={showModal} onHide={handleModalCancel} centered>
+  <Modal.Header closeButton>
+    <Modal.Title>Подтверждение</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>Вы уверены, что хотите сохранить изменения?</Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={handleModalCancel}>
+      Отмена
+    </Button>
+    <Button variant="primary" onClick={handleModalConfirm}>
+      ОК
+    </Button>
+  </Modal.Footer>
+</Modal>
+                <RWhatConclusions endFix={endFix} textareaEditableConclus={textareaEditableConclus} setTextareaEditableConclus={setTextareaEditableConclus} formData={formData} setFormData={setFormData} />
+                        </div>
+                      </div>
+            <div className="col text-center text-warning mb-5 p-0 "><h5 className=' rounded p-5 shadow' style={{textAlign:'center', marginBottom: "10%", backgroundColor: 'indigo'}}>{philosophy.TheSay} <br/> <br /><p style={{ textAlign: 'right' }}>"{philosophy.Autohor}"</p></h5>
+            {!startFix && refreshTime.Day >= 0 && (
+            <h3>Ожидание старта</h3>
+          )}
           
-          value={formData.Сonclusions} onChange={handleChange}></textarea>         
-              </div>
-              <button className="btn p-1 mx-2  rounded text-warning" type="button"  style={{ backgroundColor: 'indigo', width: '100%', marginTop: "2%" }}  aria-expanded="false" disabled={endFix}> записать   </button>
-                     </div>
-                  </div>
+          {startFix && refreshTime.Day > 0 && !isDayFixed && (
+            <h3><Countdown /></h3>
+          )}
+          
+          {startFix && refreshTime.Day > 0 && isDayFixed && (
+            <h3>Следующий день ещё не начался</h3>
+          )}
+            <div className="col p-5 align-self-center">
+              <div className='d-flex justify-content-between rounded p-0 ' style={{textAlign:'center', marginBottom: "0%", backgroundColor: ''}}>
+            <button className="btn p-4 px-5 w-50 text-start bg-secondary rounded text-warning" onClick={HandleClickPrev}>Справка </button> <span className="border border-dark bg-dark w-25" style={{borderBlockColor:"", fontSize:"30"}}></span> <button className="btn p-3 px-5 w-50 bg-secondary  text-end  rounded text-warning" onClick={HandleClickNext}>Подсказка</button>
+                    </div>
                 </div>
-              </div>
             </div>
-  <div className="col text-center text-warning mb-5 p-0 "><h5 className=' rounded p-5 shadow' style={{textAlign:'center', marginBottom: "10%", backgroundColor: 'indigo'}}>{philosophy.TheSay} <br/> <br /><p style={{ textAlign: 'right' }}>"{philosophy.Autohor}"</p></h5>
-  {!startFix && refreshTime.Day >= 0 && (
-  <h3>Ожидание старта</h3>
-)}
-
-{startFix && refreshTime.Day > 0 && !isDayFixed && (
-  <h3><Countdown /></h3>
-)}
-
-{startFix && refreshTime.Day > 0 && isDayFixed && (
-  <h3>Следующий день ещё не начался</h3>
-)}
-  <div className="col p-5 align-self-center">
-    <div className='d-flex justify-content-between rounded p-0 ' style={{textAlign:'center', marginBottom: "0%", backgroundColor: ''}}>
-  <button className="btn p-4 px-5 w-50 text-start bg-secondary rounded text-warning" onClick={HandleClickPrev}> <h1>&lt;</h1></button> <span className="border border-dark bg-dark w-25" style={{borderBlockColor:"", fontSize:"30"}}> </span> <button className="btn p-3 px-5 w-50 bg-secondary  text-end  rounded text-warning" onClick={HandleClickNext}><h1> &gt;</h1></button>
-  </div>
-  </div>
-  </div>
   
       <div className="col-4 text-center text-warning" style={{marginBottom: "3%"}}>
            <h5 className="font-italic">Записать новое знание обретённое за день</h5>
-               <textarea  className="form-control shadow rounded  p-3 mx-3" placeholder="Введите текст" style={{width: "30vw", height: "15vh", resize:"none", fontSize:"21px", color:"#333", fontFamily: "Arial, sans-serif"}} id="username"  name="NewKnoledge" value={formData.NewKnoledge} onChange={handleChange}  disabled={endFix} ></textarea>
-               <button className="btn p-1 px-1 py-3  rounded text-warning" type="button"  style={{ backgroundColor: 'indigo', width: '95%', marginTop: "2%",marginBottom: "5%" }}  aria-expanded="false" value={formData.NewKnoledge} onClick={HandleRecord}> записать-редактировать   </button>
+       <RKnow endFix={endFix} textareaEditableKnow={textareaEditableKnow} setTextareaEditableKnow={setTextareaEditableKnow} Knowledge={Knowledge} setKnowledge={setKnowledge}/>
                  <h5>Мудрость дня</h5>
-                     <textarea  className="form-control  rounded shadow p-3  mx-3" placeholder="Введите текст" style={{width: "30vw", height: "15vh", resize:"none", fontSize:"21px", color:"#333", fontFamily: "Arial, sans-serif" }} onChange={handleChangeWisdom}  disabled={!textareaEditable}></textarea>
-                     <button className="btn p-1 px-1 py-3 rounded text-warning" type="button"  style={{ backgroundColor: 'indigo', width: '95%', marginTop: "2%" }}  aria-expanded="false" disabled={endFix}  onClick={HandleRecordWisdom} > {buttonText}   </button>
+
+<RMind endFix={endFix} textareaEditableMind={textareaEditableMind} setTextareaEditable={setTextareaEditable} DayPhilos={DayPhilos} setDayPhilos={setDayPhilos} />
                        <button className="btn p-4 px-3  rounded text-warning" type="button"  style={{ backgroundColor: 'indigo', width: '95%', marginTop: "9%" }}  aria-expanded="false" disabled={endFix} onClick={HandleSubmitClickFix} > Зафиксировать день
-                    </button>
-                   </div>
+                          </button>
+                     </div>
                    <footer className="fixed-bottom" style={{backgroundColor: 'indigo'}} >
-  <div className="text-center py-3 text-warning " style={{backgroundColor: 'indigo'}}>
-    © 2023 My Website
-  </div>
-</footer>
-       </div>
-    </div>
-</form>
+                         <div className="text-center py-3 text-warning " style={{backgroundColor: 'indigo'}}>
+                                         © 2023 My Website
+                              </div>
+                        </footer>
+                      </div>
+                   </div>
+                </form>
         </>      
     )
     

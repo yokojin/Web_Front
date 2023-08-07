@@ -2,15 +2,11 @@ import axios from "axios";
 import React, { useState, useEffect, useCallback } from "react";
 import { useTimeZone } from "./useTimeZone";
 import moment from "moment-timezone";
-import config from "../components/Config";
-
-interface Params{
-    
 
 
-}
 
-const baseUrl = config.baseUrl;
+
+
 
 //передать параметры для проверкаи и вывод данных
 //Проверка наступил ли следующий день 
